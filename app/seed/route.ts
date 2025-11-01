@@ -66,6 +66,7 @@ async function seedCustomers() {
       image_url VARCHAR(255) NOT NULL
     );
   `;
+   
 
   const insertedCustomers = await Promise.all(
     customers.map(
@@ -101,17 +102,73 @@ async function seedRevenue() {
   return insertedRevenue;
 }
 
+async function seedApartments() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS apartments (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      city VARCHAR(255) NOT NULL,
+      building VARCHAR(255) NOT NULL,
+      apartment_number VARCHAR(50) NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
+      name VARCHAR(255),
+      location TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `;
+
+  // Добавляем тестовые данные (опционально)
+  const testApartments = [
+    { city: 'Moscow', building: 'Building A', apartment_number: '101', price: 1500, name: 'Cozy Studio', location: 'Near Metro' },
+    { city: 'Moscow', building: 'Building B', apartment_number: '202', price: 2500, name: 'Modern 2BR', location: 'City Center' },
+    { city: 'St. Petersburg', building: 'Tower 1', apartment_number: '305', price: 1800, name: 'Luxury Flat', location: 'Riverside' },
+    { city: 'Sumqait', building: 'Tower 1', apartment_number: '305', price: 1800, name: 'Luxury Flat', location: 'Riverside' },
+  ];
+
+   const insertedApartments = await Promise.all(
+    testApartments.map(
+      (apt) => sql`
+        INSERT INTO apartments (city, building, apartment_number, price, name, location)
+        VALUES (${apt.city}, ${apt.building}, ${apt.apartment_number}, ${apt.price}, ${apt.name}, ${apt.location})
+        ON CONFLICT (id) DO NOTHING;
+      `,
+    ),
+  );
+
+  return insertedApartments;
+}
+
+async function seedFavorites() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS favorites (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      apartment_id UUID NOT NULL REFERENCES apartments(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(apartment_id)
+    );
+  `;
+
+  console.log('✅ Favorites table created');
+}
+
 export async function GET() {
   try {
-    const result = await sql.begin((sql) => [
-      seedUsers(),
-      seedCustomers(),
-      seedInvoices(),
-      seedRevenue(),
-    ]);
+    // ✅ Правильный способ - await каждую функцию
+    await sql.begin(async (sql) => {
+      await seedUsers();
+      await seedCustomers();
+      await seedInvoices();
+      await seedRevenue();
+      await seedApartments();
+      await seedFavorites();
+    });
 
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
+    console.error('❌ Seed error:', error);
     return Response.json({ error }, { status: 500 });
   }
 }

@@ -86,3 +86,21 @@ export type InvoiceForm = {
   amount: number;
   status: 'pending' | 'paid';
 };
+
+export type Apartment = {
+  id: string;
+  name: string;
+  location: string;
+  price: number;
+  city: string;
+  building: string;
+  apartment_number: string;
+};
+
+export type FormattedApartment = {
+  id: string;
+  city: string;
+  building: string;
+  apartment_number: string;
+  full_address: string;
+};
