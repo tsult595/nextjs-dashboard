@@ -3,17 +3,21 @@ import ApartmentCards from '../ui/apartments/apartmentCards';
 import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import Search from '../ui/search';
+import InvoiceFilter from '../ui/invoices/filter';
 
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string }>; // ← Promise!
+  searchParams: Promise<{ query?: string , filter?: string; }>; // ← Promise!
+
 }) {
-  const { query = '' } = await searchParams; // ← добавь await!
-  const apartments = await getAllApartments(query);
+  const params = await searchParams;
+  const query = params.query || '';
+  const filter = params.filter || 'all'; // ← получи filter из URL
+  const apartments = await getAllApartments(query, filter);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6 ">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
@@ -39,7 +43,17 @@ export default async function Page({
         <div className="mb-8">
           <Search placeholder="Search apartments by name, city, or location..." />
         </div>
-
+       <InvoiceFilter 
+     value={filter} 
+     options={[
+    { label: 'Default (Newest First)', value: 'all' },
+    { label: 'Price: Low to High', value: 'price_asc' },
+    { label: 'Price: High to Low', value: 'price_desc' },
+    { label: 'Name: A to Z', value: 'name_asc' },
+    { label: 'Name: Z to A', value: 'name_desc' },
+     ]} 
+    />
+        <br />
         {/* Список карточек */}
         {apartments.length === 0 ? (
           <div className="text-center py-20">

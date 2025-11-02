@@ -55,7 +55,7 @@ const Header = async () => {
             </Link>
 
             {/* Favorites Button */}
-            <Link href="/favorites">
+            <Link href="apartments/favorites">
               <Button className="bg-red-500 text-white hover:bg-red-600 transition ml-2 relative">
                 <Heart className="w-5 h-5 mr-2" />
                
@@ -68,11 +68,28 @@ const Header = async () => {
                 )}
               </Button>
             </Link>
-
-            <button className="p-2 hover:bg-gray-100 rounded-full transition">
-              <UserCircleIcon className="h-8 w-8 text-gray-600" />
-            </button>
-          </nav>
+              {/* <Link
+            href="/login"
+            className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
+          >
+            <UserCircleIcon className="h-8 w-8 text-gray-600" />
+            <span>Log in</span>
+          </Link> */}
+          <Link
+            href="/login"
+            className="flex items-center flex-col gap-5 self-start rounded-lg  px-6 py-3 text-sm font-medium text-white transition-colors md:text-base"
+          >
+            <UserCircleIcon className="h-8 w-8 text-gray-600" />
+            {/* <span className='text-black'>Log in</span> */}
+          </Link>
+          <Link
+            href="/login"
+            className="flex items-center flex-col gap-5 self-start rounded-lg  px-6 py-3 text-sm font-medium text-white transition-colors md:text-base"
+          >
+            <UserCircleIcon className="h-8 w-8 text-gray-600" />
+            {/* <span className='text-black'>Register</span> */}
+          </Link>
+        </nav>
 
           {/* Mobile menu button */}
           <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">

@@ -74,46 +74,53 @@ export async function createApartment(prevState: State, formData: FormData) {
   redirect('/apartments');
 }
 
-export async function getAllApartments(query?: string) {
+export async function getAllApartments(query?: string, sortOrder?: string) {
   try {
+    let sqlQuery = `
+      SELECT 
+        id,
+        city,
+        building,
+        apartment_number,
+        price,
+        name,
+        location,
+        city || ', ' || building || ', Apt ' || apartment_number as full_address,
+        created_at
+      FROM apartments
+      WHERE 1=1
+    `;
+
+    // Поиск по query
     if (query) {
-      // Поиск с фильтром
-      const data = await sql`
-        SELECT 
-          id,
-          city,
-          building,
-          apartment_number,
-          price,
-          name,
-          location,
-          city || ', ' || building || ', Apt ' || apartment_number as full_address
-        FROM apartments
-        WHERE 
-          LOWER(name) LIKE ${`%${query.toLowerCase()}%`} OR
-          LOWER(city) LIKE ${`%${query.toLowerCase()}%`} OR
-          LOWER(location) LIKE ${`%${query.toLowerCase()}%`} OR
-          LOWER(building) LIKE ${`%${query.toLowerCase()}%`}
-        ORDER BY created_at DESC
-      `;
-      return data;
-    } else {
-      // Все apartments без фильтра
-      const data = await sql`
-        SELECT 
-          id,
-          city,
-          building,
-          apartment_number,
-          price,
-          name,
-          location,
-          city || ', ' || building || ', Apt ' || apartment_number as full_address
-        FROM apartments
-        ORDER BY created_at DESC
-      `;
-      return data;
+      sqlQuery += ` AND (
+        LOWER(name) LIKE '%${query.toLowerCase()}%' OR
+        LOWER(city) LIKE '%${query.toLowerCase()}%' OR
+        LOWER(location) LIKE '%${query.toLowerCase()}%' OR
+        LOWER(building) LIKE '%${query.toLowerCase()}%'
+      )`;
     }
+
+    // Сортировка
+      switch (sortOrder) {
+      case 'price_asc':
+        sqlQuery += ` ORDER BY price ASC`;
+        break;
+      case 'price_desc':
+        sqlQuery += ` ORDER BY price DESC`;
+        break;
+      case 'name_asc':
+        sqlQuery += ` ORDER BY name ASC`;
+        break;
+      case 'name_desc':
+        sqlQuery += ` ORDER BY name DESC`;
+        break;
+      default:
+        sqlQuery += ` ORDER BY created_at DESC`;
+    }
+
+    const data = await sql.unsafe(sqlQuery);
+    return data;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch apartments.');
@@ -156,6 +163,28 @@ export async function deleteApartmentById(id: string) {
    } 
 }
 
+export async function getFavoriteApartments() {
+  try {
+    const data = await sql`
+      SELECT 
+        a.id,
+        a.name,
+        a.location,
+        a.city,
+        a.price,
+        a.building,
+        a.apartment_number,
+        f.created_at as favorited_at
+      FROM favorites f
+      INNER JOIN apartments a ON f.apartment_id = a.id
+      ORDER BY f.created_at DESC
+    `;
+    return data;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}
 
 export async function addApartmentToFavorites(apartmentId: string) {
   try {
@@ -219,28 +248,6 @@ export async function getFavoritesCount(): Promise<number> {
   } catch (error) {
     console.error('❌ Error getting favorites count:', error);
     return 0;
-  }
-}
-
-export async function getFavoriteApartments() {
-  try {
-    const data = await sql`
-      SELECT 
-        a.id,
-        a.city,
-        a.building,
-        a.apartment_number,
-        a.price,
-        a.name,
-        a.location
-      FROM apartments a
-      INNER JOIN favorites f ON a.id = f.apartment_id
-      ORDER BY f.created_at DESC
-    `;
-    return data;
-  } catch (error) {
-    console.error('❌ Database Error:', error);
-    return [];
   }
 }
 
