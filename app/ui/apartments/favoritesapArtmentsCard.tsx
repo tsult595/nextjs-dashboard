@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { MapPinIcon, CurrencyDollarIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { removeApartmentFromFavorites } from '@/app/lib/apartmentsActions';
+import { useRouter } from 'next/navigation';
 
 export default function FavoriteApartmentCard({
   id,
@@ -23,32 +24,40 @@ export default function FavoriteApartmentCard({
 }) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     setIsRemoving(true);
-    setTimeout(() => {
-      startTransition(async () => {
-        await removeApartmentFromFavorites(id);
-      });
-    }, 100);
+    
+    startTransition(async () => {
+      const result = await removeApartmentFromFavorites(id);
+      
+      if (result.success) {
+        console.log('✅ Removed from favorites');
+        router.refresh(); // принудительно обновляем страницу
+      } else {
+        console.log('❌ Failed to remove');
+        setIsRemoving(false);
+      }
+    });
   };
+
+  if (isRemoving) {
+    return null; // сразу скрываем карточку
+  }
 
   return (
     <Link href={`/apartments/${id}`}>
-      <div
-        className={`relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group ${
-          isRemoving ? 'opacity-50 pointer-events-none' : ''
-        }`}
-      >
+      <div className="relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
         {/* Badge "В избранном" */}
         <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 z-10">
           <HeartSolidIcon className="h-4 w-4" />
           В избранном
         </div>
-
+        
         {/* Кнопка удаления */}
         <button
           onClick={handleRemove}
@@ -64,7 +73,7 @@ export default function FavoriteApartmentCard({
           <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition">
             {name}
           </h2>
-
+        
           <div className="space-y-2 mb-4">
             <div className="flex items-center gap-2 text-gray-600">
               <MapPinIcon className="h-5 w-5" />

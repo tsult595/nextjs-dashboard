@@ -1,11 +1,16 @@
 import React from 'react';
 import { getFavoriteApartments } from '../../lib/apartmentsActions';
-import FavoriteApartmentCard from '../../ui/apartments/apartmentCards';
+import FavoriteApartmentCard from '../../ui/apartments/favoritesapArtmentsCard'; // ← ИСПРАВЬ ЭТО!
 import Link from 'next/link';
 import { HeartIcon, HomeIcon } from '@heroicons/react/24/outline';
 
+export const dynamic = 'force-dynamic'; // ← добавь это
+export const revalidate = 0; // ← и это
+
 export default async function FavoritesPage() {
   const favorites = await getFavoriteApartments();
+
+  console.log('📊 Favorites:', favorites); // ← дебаг
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">

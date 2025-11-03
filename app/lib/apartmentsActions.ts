@@ -78,45 +78,43 @@ export async function getAllApartments(query?: string, sortOrder?: string) {
   try {
     let sqlQuery = `
       SELECT 
-        id,
-        city,
-        building,
-        apartment_number,
-        price,
-        name,
-        location,
-        city || ', ' || building || ', Apt ' || apartment_number as full_address,
-        created_at
-      FROM apartments
+        a.id,
+        a.city,
+        a.building,
+        a.apartment_number,
+        a.price,
+        a.name,
+        a.location,
+        a.created_at,
+        CASE WHEN f.apartment_id IS NOT NULL THEN true ELSE false END as is_favorite
+      FROM apartments a
+      LEFT JOIN favorites f ON a.id = f.apartment_id
       WHERE 1=1
     `;
 
-    // Поиск по query
+    // Поиск
     if (query) {
       sqlQuery += ` AND (
-        LOWER(name) LIKE '%${query.toLowerCase()}%' OR
-        LOWER(city) LIKE '%${query.toLowerCase()}%' OR
-        LOWER(location) LIKE '%${query.toLowerCase()}%' OR
-        LOWER(building) LIKE '%${query.toLowerCase()}%'
+        LOWER(a.name) LIKE '%${query.toLowerCase()}%' OR
+        LOWER(a.city) LIKE '%${query.toLowerCase()}%' OR
+        LOWER(a.location) LIKE '%${query.toLowerCase()}%'
       )`;
     }
-
-    // Сортировка
-      switch (sortOrder) {
+    switch (sortOrder) {
       case 'price_asc':
-        sqlQuery += ` ORDER BY price ASC`;
+        sqlQuery += ` ORDER BY a.price ASC`;
         break;
       case 'price_desc':
-        sqlQuery += ` ORDER BY price DESC`;
+        sqlQuery += ` ORDER BY a.price DESC`;
         break;
       case 'name_asc':
-        sqlQuery += ` ORDER BY name ASC`;
+        sqlQuery += ` ORDER BY a.name ASC`;
         break;
       case 'name_desc':
-        sqlQuery += ` ORDER BY name DESC`;
+        sqlQuery += ` ORDER BY a.name DESC`;
         break;
       default:
-        sqlQuery += ` ORDER BY created_at DESC`;
+        sqlQuery += ` ORDER BY a.created_at DESC`;
     }
 
     const data = await sql.unsafe(sqlQuery);

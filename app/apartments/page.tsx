@@ -109,6 +109,7 @@ export default async function Page({
                   location={apt.location}
                   city={apt.city}
                   price={apt.price}
+                  isFavorite={apt.is_favorite}
                 />
               </Link>
             ))}
